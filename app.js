@@ -1,3 +1,4 @@
+import { setupNotifications } from './notifications.js';
 import { initialState, elapsed, remaining, toggleWork, toggleDay, format, validState } from './timer.js';
 const KEY = 'worktimer.v1';
 const $ = id => document.getElementById(id);
@@ -5,6 +6,7 @@ let state = initialState();
 let storageAvailable = true;
 try { const raw = localStorage.getItem(KEY); if (raw) { const parsed = JSON.parse(raw); if (!validState(parsed)) throw new Error('invalid'); state = parsed; } } catch { storageAvailable = false; }
 function message(text) { $('message').textContent = text; }
+const notifications = setupNotifications({ button: $('notifications-toggle'), testButton: $('notifications-test'), status: $('notifications-status'), message });
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); storageAvailable = true; } catch { storageAvailable = false; }
   updateSaveNote();
@@ -46,6 +48,7 @@ function render() {
   if (dayDone && state.day.startedAt !== null && !state.day.announced) {
     state.day.remaining = 0; state.day.startedAt = null; state.day.announced = true; save();
     message('Рабочий день завершён. Отличная работа!'); chime();
+    void notifications.showCompletion();
   }
   $('date').textContent = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', weekday: 'short' });
 }
